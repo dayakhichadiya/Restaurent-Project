@@ -10,6 +10,8 @@ import amb from "../assets/amb.jpeg"
 import amb1 from "../assets/amb1.jpeg"
 import amb3 from "../assets/amb3.jpeg"
 import amb2 from "../assets/amb2.jpeg"
+import lithos from "../assets/lithos.jpg"
+import bg from "../assets/pizza.jpg"
 
 export default function Home() {
   const features = [
@@ -35,35 +37,36 @@ export default function Home() {
       <Navbar />
 
 
-      <div
-        className="relative h-screen bg-cover bg-center"
-        style={{
-          // backgroundImage: `url(${back})`,
-          backgroundImage: `url("https://t4.ftcdn.net/jpg/06/30/88/01/360_F_630880161_0m4cwaGBLFBhoqy5rlI2VkIhRv8SlrPw.jpg")`,
-        }}
-      >
-        {/* Dark overlay and text */}
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
-            Welcome to <span className="text-yellow-400">Lithos Bar and Grill</span>
-          </h1>
-          <p className="text-lg md:text-2xl mb-6">
-            Experience culinary perfection, one dish at a time.
-          </p>
-          <div className="flex flex-col md:flex-row gap-4">
-            <Link to="/menu">
-              <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg shadow-md transition-all">
-                View Menu
-              </button>
-            </Link>
-            <Link to="/dashboard">
-              <button className="bg-white hover:bg-gray-200 text-black font-semibold py-2 px-6 rounded-lg shadow-md transition-all">
-                Admin Dashboard
-              </button>
-            </Link>
+        <div
+          className="relative h-screen bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${bg})`,
+            // backgroundImage: `url("https://media.istockphoto.com/id/1093661558/photo/indian-dish-chicken-tikka-masala.jpg?s=1024x1024&w=is&k=20&c=CUbawWgHpnKam2GmEWd_6IM_FQV9a8MKgh8rGRlkgjQ=")`,
+          }}
+        >
+          {/* <img src={lithos} alt="" /> */}
+          {/* Dark overlay and text */}
+          <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-4">
+            <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
+              Welcome to <span className="text-yellow-400">Lithos Bar and Grill</span>
+            </h1>
+            <p className="text-lg md:text-2xl mb-6">
+              Experience culinary perfection, one dish at a time.
+            </p>
+            <div className="flex flex-col md:flex-row gap-4">
+              <Link to="/menu">
+                <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg shadow-md transition-all">
+                  View Menu
+                </button>
+              </Link>
+              <Link to="/dashboard">
+                <button className="bg-white hover:bg-gray-200 text-black font-semibold py-2 px-6 rounded-lg shadow-md transition-all">
+                  Admin Dashboard
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
 
 
 
