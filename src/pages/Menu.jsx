@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import Navbar from "../component/Navbar";
 import html2canvas from 'html2canvas-pro';
-import {db} from '../firebase'
+// import {db} from '../firebase'
 
 export default function Menu() {
   const [menu, setMenu] = useState([]);
@@ -28,6 +28,29 @@ export default function Menu() {
       );
     } else {
       setOrder([...order, { ...item, qty: 1 }]);
+    }
+  };
+
+
+  const sendOrderToAdmin = async () => {
+    try {
+      if (tableId && order.length > 0) {
+        // Send the order to Firestore (or your backend)
+        await addDoc(collection(db, "orders"), {
+          tableId,
+          order,
+          total: order.reduce((sum, o) => sum + o.qty * o.price, 0),
+          timestamp: new Date(),
+        });
+        alert("Order sent to the kitchen!");
+        setOrder([]);  // Clear the order after sending
+        setTableId(""); // Reset table selection
+      } else {
+        alert("Please select a table and add items to the order.");
+      }
+    } catch (error) {
+      console.error("Error sending order: ", error);
+      alert("Error sending the order.");
     }
   };
 
@@ -116,6 +139,7 @@ export default function Menu() {
           </ul>
         )}
 
+        {/* order summary */}
         {order.length > 0 && (
           <div
             ref={billRef}
