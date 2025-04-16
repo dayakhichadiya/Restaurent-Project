@@ -1,285 +1,49 @@
-
-// import { useState } from "react";
-// // import { collection, addDoc } from "firebase/firestore";
-// // import { db } from "../firebase";
-// import { Link } from "react-router-dom";
-
-// const ADMIN_PASSWORD = "lithos123"; // 
-
-// const Dashboard = () => {
-//   const [authPassed, setAuthPassed] = useState(false);
-//   const [adminInput, setAdminInput] = useState("");
-//   const [item, setItem] = useState("");
-//   const [price, setPrice] = useState("");
-
-//   const handlePasswordCheck = () => {
-//     if (adminInput === ADMIN_PASSWORD) {
-//       setAuthPassed(true);
-//     } else {
-//       alert("Incorrect admin password");
-//     }
-//   };
-
-
-//   const handleAdd = () => {
-//     if (!item || !price) return alert("Fill all fields");
-
-//     const newItem = { item, price };
-
-//     // Get existing menu from localStorage
-//     const existingItems = JSON.parse(localStorage.getItem("menu")) || [];
-
-//     // Add new item and update localStorage
-//     const updatedItems = [...existingItems, newItem];
-//     localStorage.setItem("menu", JSON.stringify(updatedItems));
-
-//     setItem("");
-//     setPrice("");
-//     alert("Menu item added!");
-//   };
-
-
-//   return (
-//     <div className="p-6 max-w-xl mx-auto">
-//       {!authPassed ? (
-//         <div className="bg-white p-6 rounded shadow-md">
-//           <h2 className="text-2xl font-semibold mb-4 text-center text-red-600">Admin Access</h2>
-//           <input
-//             type="password"
-//             placeholder="Enter Admin Password"
-//             className="w-full border p-3 mb-4 rounded"
-//             value={adminInput}
-//             onChange={(e) => setAdminInput(e.target.value)}
-//           />
-//           <button
-//             onClick={handlePasswordCheck}
-//             className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
-//           >
-//             Submit
-//           </button>
-//         </div>
-//       ) : (
-//         <div className="bg-white p-6 rounded shadow-md">
-//           <h2 className="text-2xl font-bold mb-4">Add Menu Item</h2>
-//           <input
-//             className="border p-2 mb-2 block w-full"
-//             placeholder="Item Name"
-//             value={item}
-//             onChange={(e) => setItem(e.target.value)}
-//           />
-//           <input
-//             className="border p-2 mb-4 block w-full"
-//             placeholder="Price"
-//             value={price}
-//             onChange={(e) => setPrice(e.target.value)}
-//           />
-//           <Link to="/menu">
-//             <button
-//               onClick={handleAdd}
-//               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-//             >
-//               Add
-//             </button>
-//           </Link>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
-
-
-// new were updated
-
-// import { useState, useEffect } from "react";
-// import { Link } from "react-router-dom";
-
-// const ADMIN_PASSWORD = "lithos123";
-
-// const Dashboard = () => {
-//   const [authPassed, setAuthPassed] = useState(false);
-//   const [adminInput, setAdminInput] = useState("");
-//   const [item, setItem] = useState("");
-//   const [price, setPrice] = useState("");
-//   const [menu, setMenu] = useState([]);
-//   const [editingIndex, setEditingIndex] = useState(null);
-//   const [editedPrice, setEditedPrice] = useState("");
-
-//   // Load menu items from localStorage
-//   useEffect(() => {
-//     const storedMenu = JSON.parse(localStorage.getItem("menu")) || [];
-//     setMenu(storedMenu);
-//   }, []);
-
-//   // Save menu items to localStorage
-//   const updateLocalStorage = (updatedMenu) => {
-//     localStorage.setItem("menu", JSON.stringify(updatedMenu));
-//     setMenu(updatedMenu);
-//   };
-
-//   const handlePasswordCheck = () => {
-//     if (adminInput === ADMIN_PASSWORD) {
-//       setAuthPassed(true);
-//     } else {
-//       alert("Incorrect admin password");
-//     }
-//   };
-
-//   const handleAdd = () => {
-//     if (!item || !price) return alert("Fill all fields");
-
-//     const newItem = { item, price };
-//     const updatedMenu = [...menu, newItem];
-//     updateLocalStorage(updatedMenu);
-//     setItem("");
-//     setPrice("");
-//     alert("Menu item added!");
-//   };
-
-//   const handleDelete = (index) => {
-//     const updatedMenu = [...menu];
-//     updatedMenu.splice(index, 1);
-//     updateLocalStorage(updatedMenu);
-//   };
-
-//   const handleEdit = (index) => {
-//     setEditingIndex(index);
-//     setEditedPrice(menu[index].price);
-//   };
-
-//   const handleSaveEdit = (index) => {
-//     const updatedMenu = [...menu];
-//     updatedMenu[index].price = editedPrice;
-//     updateLocalStorage(updatedMenu);
-//     setEditingIndex(null);
-//     setEditedPrice("");
-//   };
-
-//   return (
-//     <div className="p-6 max-w-xl mx-auto">
-//       {!authPassed ? (
-//         <div className="bg-white p-6 rounded shadow-md">
-//           <h2 className="text-2xl font-semibold mb-4 text-center text-red-600">Admin Access</h2>
-//           <input
-//             type="password"
-//             placeholder="Enter Admin Password"
-//             className="w-full border p-3 mb-4 rounded"
-//             value={adminInput}
-//             onChange={(e) => setAdminInput(e.target.value)}
-//           />
-//           <button
-//             onClick={handlePasswordCheck}
-//             className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
-//           >
-//             Submit
-//           </button>
-//         </div>
-//       ) : (
-//         <div className="bg-white p-6 rounded shadow-md">
-//           <h2 className="text-2xl font-bold mb-4">Add Menu Item</h2>
-//           <input
-//             className="border p-2 mb-2 block w-full"
-//             placeholder="Item Name"
-//             value={item}
-//             onChange={(e) => setItem(e.target.value)}
-//           />
-//           <input
-//             className="border p-2 mb-4 block w-full"
-//             placeholder="Price"
-//             value={price}
-//             onChange={(e) => setPrice(e.target.value)}
-//           />
-//           <button
-//             onClick={handleAdd}
-//             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-6"
-//           >
-//             Add
-//           </button>
-
-//           <h2 className="text-xl font-semibold mb-3">Menu Items</h2>
-//           {menu.length === 0 ? (
-//             <p className="text-gray-500">No menu items available.</p>
-//           ) : (
-//             <ul className="space-y-4">
-//               {menu.map((menuItem, index) => (
-//                 <li
-//                   key={index}
-//                   className="border p-4 rounded flex justify-between items-center"
-//                 >
-//                   <div>
-//                     <p className="font-semibold">{menuItem.item}</p>
-//                     {editingIndex === index ? (
-//                       <input
-//                         className="border mt-1 p-1 w-20"
-//                         value={editedPrice}
-//                         onChange={(e) => setEditedPrice(e.target.value)}
-//                       />
-//                     ) : (
-//                       <p>₹ {menuItem.price}</p>
-//                     )}
-//                   </div>
-//                   <div className="flex gap-2">
-//                     {editingIndex === index ? (
-//                       <button
-//                         onClick={() => handleSaveEdit(index)}
-//                         className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-//                       >
-//                         Save
-//                       </button>
-//                     ) : (
-//                       <button
-//                         onClick={() => handleEdit(index)}
-//                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-//                       >
-//                         Edit
-//                       </button>
-//                     )}
-//                     <button
-//                       onClick={() => handleDelete(index)}
-//                       className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-//                     >
-//                       Delete
-//                     </button>
-//                   </div>
-//                 </li>
-//               ))}
-//             </ul>
-//           )}
-
-//           <Link to="/menu">
-//             <button className="mt-6 w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800">
-//               Go to Menu Page
-//             </button>
-//           </Link>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
-
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { db } from "../firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  updateDoc,
+  doc,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import * as XLSX from "xlsx";
 
 const ADMIN_PASSWORD = "lithos123";
 
 const Dashboard = () => {
   const [authPassed, setAuthPassed] = useState(false);
   const [adminInput, setAdminInput] = useState("");
+  const [activeTab, setActiveTab] = useState("orders");
+
+  const [orders, setOrders] = useState([]);
+  const [menu, setMenu] = useState([
+    { item: "Coca", price: "15" },
+    { item: "Sprite", price: "25" },
+    { item: "Pizza", price: "150" },
+    { item: "Mojhito", price: "50" },
+  ]);
+
   const [item, setItem] = useState("");
   const [price, setPrice] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedPrice, setEditedPrice] = useState("");
 
-  // ✅ Static menu initialized once
-  const [menu, setMenu] = useState([
-    { item: "Paneer Tikka", price: "180" },
-    { item: "Chicken Biryani", price: "250" },
-    { item: "Veg Burger", price: "120" },
-  ]);
+  useEffect(() => {
+    const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const orderList = [];
+      querySnapshot.forEach((doc) => {
+        orderList.push({ id: doc.id, ...doc.data() });
+      });
+      setOrders(orderList);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handlePasswordCheck = () => {
     if (adminInput === ADMIN_PASSWORD) {
@@ -291,10 +55,8 @@ const Dashboard = () => {
 
   const handleAdd = () => {
     if (!item || !price) return alert("Fill all fields");
-
     const newItem = { item, price };
-    const updatedMenu = [...menu, newItem];
-    setMenu(updatedMenu);
+    setMenu([...menu, newItem]);
     setItem("");
     setPrice("");
     alert("Menu item added!");
@@ -319,26 +81,112 @@ const Dashboard = () => {
     setEditedPrice("");
   };
 
+  const handleStatusChange = async (orderId, newStatus) => {
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, { status: newStatus });
+  };
+
+  const downloadExcel = () => {
+    const excelData = orders.map((order) => ({
+      Table: order.tableId,
+      Total: `€${order.total.toFixed(2)}`,
+      Status: order.status || "Pending",
+      Items: order.order.map((i) => `${i.item} (x${i.qty})`).join(", "),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+    XLSX.writeFile(workbook, "orders.xlsx");
+  };
+
+  if (!authPassed) {
+    return (
+      <div className="p-6 max-w-md mx-auto bg-white shadow rounded mt-10">
+        <h2 className="text-2xl font-semibold mb-4 text-center text-red-600">Admin Login</h2>
+        <input
+          type="password"
+          placeholder="Enter Admin Password"
+          className="w-full border p-3 mb-4 rounded"
+          value={adminInput}
+          onChange={(e) => setAdminInput(e.target.value)}
+        />
+        <button
+          onClick={handlePasswordCheck}
+          className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
+        >
+          Submit
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      {!authPassed ? (
-        <div className="bg-white p-6 rounded shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-center text-red-600">Admin Access</h2>
-          <input
-            type="password"
-            placeholder="Enter Admin Password"
-            className="w-full border p-3 mb-4 rounded"
-            value={adminInput}
-            onChange={(e) => setAdminInput(e.target.value)}
-          />
-          <button
-            onClick={handlePasswordCheck}
-            className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
-          >
-            Submit
-          </button>
+    <div className="p-6 max-w-4xl mx-auto">
+      {/* Tabs */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          onClick={() => setActiveTab("orders")}
+          className={`px-4 py-2 rounded ${activeTab === "orders" ? "bg-gray-800 text-white" : "bg-gray-200"}`}
+        >
+          View Orders
+        </button>
+        <button
+          onClick={() => setActiveTab("menu")}
+          className={`px-4 py-2 rounded ${activeTab === "menu" ? "bg-gray-800 text-white" : "bg-gray-200"}`}
+        >
+          Add Menu
+        </button>
+      </div>
+
+      {/* View Orders */}
+      {activeTab === "orders" && (
+        <div>
+          <h3 className="text-2xl font-bold mb-4">Today's Orders</h3>
+          {orders.length === 0 ? (
+            <p className="text-center text-gray-500">No orders yet</p>
+          ) : (
+            <ul>
+              {orders.map((order) => (
+                <li key={order.id} className="p-4 border-b">
+                  <p>Table: {order.tableId}</p>
+                  <ul className="text-sm mb-2">
+                    {order.order.map((item, index) => (
+                      <li key={index}>
+                        {item.item} (x{item.qty}) - €{(item.price * item.qty).toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="font-bold">Total: €{order.total.toFixed(2)}</p>
+                  <p className="text-sm">
+                    Status:{" "}
+                    <span className={`font-semibold ${order.status === "Done" ? "text-green-600" : "text-yellow-600"}`}>
+                      {order.status || "Pending"}
+                    </span>
+                  </p>
+                  <button
+                    onClick={() => handleStatusChange(order.id, order.status === "Done" ? "Pending" : "Done")}
+                    className="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                  >
+                    Mark as {order.status === "Done" ? "Pending" : "Done"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {orders.length > 0 && (
+            <button
+              onClick={downloadExcel}
+              className="mt-6 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Download Excel
+            </button>
+          )}
         </div>
-      ) : (
+      )}
+
+      {/* Add Menu */}
+      {activeTab === "menu" && (
         <div className="bg-white p-6 rounded shadow-md">
           <h2 className="text-2xl font-bold mb-4">Add Menu Item</h2>
           <input
@@ -361,54 +209,50 @@ const Dashboard = () => {
           </button>
 
           <h2 className="text-xl font-semibold mb-3">Menu Items</h2>
-          {menu.length === 0 ? (
-            <p className="text-gray-500">No menu items available.</p>
-          ) : (
-            <ul className="space-y-4">
-              {menu.map((menuItem, index) => (
-                <li
-                  key={index}
-                  className="border p-4 rounded flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-semibold">{menuItem.item}</p>
-                    {editingIndex === index ? (
-                      <input
-                        className="border mt-1 p-1 w-20"
-                        value={editedPrice}
-                        onChange={(e) => setEditedPrice(e.target.value)}
-                      />
-                    ) : (
-                      <p>€ {menuItem.price}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {editingIndex === index ? (
-                      <button
-                        onClick={() => handleSaveEdit(index)}
-                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                      >
-                        Save
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleEdit(index)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                      >
-                        Edit
-                      </button>
-                    )}
+          <ul className="space-y-4">
+            {menu.map((menuItem, index) => (
+              <li
+                key={index}
+                className="border p-4 rounded flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-semibold">{menuItem.item}</p>
+                  {editingIndex === index ? (
+                    <input
+                      className="border mt-1 p-1 w-20"
+                      value={editedPrice}
+                      onChange={(e) => setEditedPrice(e.target.value)}
+                    />
+                  ) : (
+                    <p>€ {menuItem.price}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {editingIndex === index ? (
                     <button
-                      onClick={() => handleDelete(index)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      onClick={() => handleSaveEdit(index)}
+                      className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
                     >
-                      Delete
+                      Save
                     </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                  ) : (
+                    <button
+                      onClick={() => handleEdit(index)}
+                      className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(index)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
 
           <Link to="/menu">
             <button className="mt-6 w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800">

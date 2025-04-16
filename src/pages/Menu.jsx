@@ -1,7 +1,8 @@
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import {db} from '../firebase'
 import { useEffect, useState, useRef } from "react";
 import Navbar from "../component/Navbar";
 import html2canvas from 'html2canvas-pro';
-// import {db} from '../firebase'
 
 export default function Menu() {
   const [menu, setMenu] = useState([]);
@@ -53,6 +54,25 @@ export default function Menu() {
       alert("Error sending the order.");
     }
   };
+
+  // const sendOrderToAdmin = async () => {
+  //   try {
+  //     const orderData = {
+  //       tableId: tableId,       // assume you have this in state
+  //       order: cartItems,       // assume this is your selected items with qty and price
+  //       total: cartItems.reduce((sum, item) => sum + item.qty * item.price, 0),
+  //       timestamp: Timestamp.now()
+  //     };
+  
+  //     await addDoc(collection(db, "orders"), orderData);
+  //     alert("Order sent to admin!");
+  //     setCartItems([]); // clear cart
+  //     setTableId("");   // reset table
+  //   } catch (error) {
+  //     console.error("Error sending order: ", error);
+  //   }
+  // };
+  
 
   const handleQtyChange = (index, qty) => {
     const updated = [...order];
@@ -230,6 +250,15 @@ export default function Menu() {
                       <td className="py-2 text-right">€{(o.qty * o.price).toFixed(2)}</td>
                     </tr>
                   ))}
+
+<div className="flex justify-end mt-6">
+              <button
+                onClick={sendOrderToAdmin}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-semibold"
+              >
+                Send Order to Kitchen
+              </button>
+            </div>
                 </tbody>
               </table>
             </div>
