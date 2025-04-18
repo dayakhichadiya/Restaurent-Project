@@ -16,6 +16,8 @@ export default function Menu() {
   const [orderSent, setOrderSent] = useState(false);
   const [finalBill, setFinalBill] = useState(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   console.log("🚀 ~ Menu ~ orderSent:", orderSent)
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function Menu() {
       return () => clearTimeout(timer);
     }
   }, [orderSent]);
+
   const handleOrder = (item) => {
     const existing = order.find((o) => o.item === item.item);
     if (existing) {
@@ -54,12 +57,70 @@ export default function Menu() {
   //     console.log("inner try block alert beore")
 
 
+  // const sendOrderToAdmin = async () => {
+  //   const confirm = window.confirm("Are you sure you want to send this order to the kitchen?");
+  //   if (!confirm) return;
+    
+  //   setIsLoading(true);
+  //   await addDoc(collection(db, "orders"), billData);
+  //   setIsLoading(false);
+
+
+  //   if (!tableId.trim()) {
+  //     alert("Please select a valid table.");
+  //     return;
+  //   }
+    
+
+  //   try {
+  //     if (tableId && order.length > 0) {
+  //       const billData = {
+  //         tableId,
+  //         order: [...order],
+  //         total: order.reduce((sum, o) => sum + o.qty * o.price, 0),
+  //         timestamp: Timestamp.now(),
+  //       };
+  //       console.log('debuging on button')
+
+  //       // Add to Firestore
+  //       await addDoc(collection(db, "orders"), billData);
+
+  //       // Save for rendering
+  //       setFinalBill(billData);
+  //       setOrderSent(true);
+  //       setOrder([]);
+  //       setTableId("");
+  //       alert("Order sent to the kitchen!");
+
+
+
+
+  //       // Delay to allow re-render
+  //     } else {
+  //       alert("Please select a table and add items to the order.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error sending order: ", error);
+  //     alert("Error sending the order.");
+  //   }
+  // };
+
+
   const sendOrderToAdmin = async () => {
-
-
+    setIsLoading(true);
+  
     const confirm = window.confirm("Are you sure you want to send this order to the kitchen?");
-    if (!confirm) return;
-
+    if (!confirm) {
+      setIsLoading(false);
+      return;
+    }
+  
+    if (!tableId.trim()) {
+      alert("Please select a valid table.");
+      setIsLoading(false);
+      return;
+    }
+  
     try {
       if (tableId && order.length > 0) {
         const billData = {
@@ -68,31 +129,27 @@ export default function Menu() {
           total: order.reduce((sum, o) => sum + o.qty * o.price, 0),
           timestamp: Timestamp.now(),
         };
-        console.log('debuging on button')
-
-        // Add to Firestore
+  
+        // Now add to Firestore (AFTER billData is defined)
         await addDoc(collection(db, "orders"), billData);
-
+  
         // Save for rendering
         setFinalBill(billData);
         setOrderSent(true);
         setOrder([]);
         setTableId("");
         alert("Order sent to the kitchen!");
-
-        
-        
-
-         // Delay to allow re-render
       } else {
         alert("Please select a table and add items to the order.");
       }
     } catch (error) {
       console.error("Error sending order: ", error);
       alert("Error sending the order.");
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
   const saveAsImage = () => {
     if (!billRef.current) {
       alert("Bill not ready yet!");
@@ -106,8 +163,6 @@ export default function Menu() {
       link.click();
     });
   };
-
-
 
 
   const handleQtyChange = (index, qty) => {
@@ -250,14 +305,21 @@ export default function Menu() {
                 </div>
               )} */}
 
-              {/* {order.length > 0 && (
+
+
+
+              {(order.length > 0 || orderSent) && (
                 <div className="flex justify-end mt-6">
                   {!orderSent ? (
                     <button
                       onClick={sendOrderToAdmin}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-semibold transition"
+                      disabled={isLoading}
+                      className={`${isLoading
+                          ? "bg-blue-300 cursor-wait"
+                          : "bg-blue-500 hover:bg-blue-600"
+                        } text-white px-6 py-2 rounded font-semibold transition`}
                     >
-                      Send Order to Kitchen
+                      {isLoading ? "Sending..." : "Send Order"}
                     </button>
                   ) : (
                     <button
@@ -268,27 +330,7 @@ export default function Menu() {
                     </button>
                   )}
                 </div>
-              )} */}
-
-{(order.length > 0 || orderSent) && (
-  <div className="flex justify-end mt-6">
-    {!orderSent ? (
-      <button
-        onClick={sendOrderToAdmin}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-semibold transition"
-      >
-        Send Order
-      </button>
-    ) : (
-      <button
-        onClick={saveAsImage}
-        className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2 rounded font-semibold"
-      >
-        Show Bill
-      </button>
-    )}
-  </div>
-)}
+              )}
 
 
             </div>
