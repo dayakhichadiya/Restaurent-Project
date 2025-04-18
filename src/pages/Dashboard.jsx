@@ -33,6 +33,13 @@ const Dashboard = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedPrice, setEditedPrice] = useState("");
 
+  // await addDoc(collection(db, "menu"), {
+  //   item: "Coca",
+  //   price: "15",
+  //   timestamp: serverTimestamp()
+  // });
+  
+
   useEffect(() => {
     const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -53,14 +60,32 @@ const Dashboard = () => {
     }
   };
 
-  const handleAdd = () => {
+  // const handleAdd = () => {
+  //   if (!item || !price) return alert("Fill all fields");
+  //   const newItem = { item, price };
+  //   setMenu([...menu, newItem]);
+  //   setItem("");
+  //   setPrice("");
+  //   alert("Menu item added!");
+  // };
+
+  const handleAdd = async () => {
     if (!item || !price) return alert("Fill all fields");
+  
     const newItem = { item, price };
-    setMenu([...menu, newItem]);
-    setItem("");
-    setPrice("");
-    alert("Menu item added!");
+    try {
+      await addDoc(collection(db, "menu"), {
+        ...newItem,
+        timestamp: serverTimestamp(),
+      });
+      setItem("");
+      setPrice("");
+      alert("Menu item added!");
+    } catch (error) {
+      console.error("Error adding menu item:", error);
+    }
   };
+  
 
   const handleDelete = (index) => {
     const updatedMenu = [...menu];
@@ -84,21 +109,53 @@ const Dashboard = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     const orderRef = doc(db, "orders", orderId);
     await updateDoc(orderRef, { status: newStatus });
+    console.log("status")
   };
 
-  const downloadExcel = () => {
+  // const downloadExcel = () => {
+  //   const excelData = orders.map((order) => ({
+  //     Table: order.tableId,
+  //     Total: `€${order.total.toFixed(2)}`,
+  //     Status: order.status || "Pending",
+  //     Items: order.order.map((i) => `${i.item} (x${i.qty})`).join(", "),
+  //   }));
+
+  //   const worksheet = XLSX.utils.json_to_sheet(excelData);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+  //   XLSX.writeFile(workbook, "orders.xlsx");
+  // };
+
+
+  const downloadExcel = async () => {
     const excelData = orders.map((order) => ({
       Table: order.tableId,
       Total: `€${order.total.toFixed(2)}`,
       Status: order.status || "Pending",
       Items: order.order.map((i) => `${i.item} (x${i.qty})`).join(", "),
     }));
-
+  
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
     XLSX.writeFile(workbook, "orders.xlsx");
+  
+    // Delete orders from Firestore
+    try {
+      const deletePromises = orders.map((order) => {
+        const orderRef = doc(db, "orders", order.id);
+        return updateDoc(orderRef, { deleted: true }); // Optional: Mark deleted
+        // or: return deleteDoc(orderRef); // to completely delete
+      });
+  
+      await Promise.all(deletePromises);
+      alert("Excel downloaded and all orders removed.");
+    } catch (error) {
+      console.error("Error deleting orders:", error);
+      alert("Failed to delete some orders.");
+    } lithos123
   };
+  
 
   if (!authPassed) {
     return (

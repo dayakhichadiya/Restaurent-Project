@@ -1,0 +1,14 @@
+{
+    "menu": [
+      { "id": 1, "item": "Coca", "price": 15 },
+      { "id": 2, "item": "Sprite", "price": 25 },
+      { "id": 3, "item": "Pizza", "price": 150 },
+      { "id": 4, "item": "Lemonade", "price": 50 },
+      { "id": 5, "item": "Mazaa", "price": 40 },
+      { "id": 6, "item": "Limca", "price": 30 },
+      { "id": 7, "item": "Momos", "price": 40 },
+      { "id": 8, "item": "coconut-ice", "price": 80 },
+      { "id": 9, "item": "Burge", "price": 70 }
+    ]
+  }
+  
