@@ -6,7 +6,6 @@ import Login from "./component/Login";
 import { Toaster } from 'react-hot-toast';
 
 
-
 function App() {
   return (
     <Router basename="/">

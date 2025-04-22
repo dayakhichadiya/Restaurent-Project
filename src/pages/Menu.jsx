@@ -20,12 +20,6 @@ export default function Menu() {
 
   console.log("🚀 ~ Menu ~ orderSent:", orderSent)
 
-  // useEffect(() => {
-  //   const storedMenu = JSON.parse(localStorage.getItem("menu")) || [];
-  //   setMenu(storedMenu);
-  // }, []);
-
-
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
@@ -43,7 +37,6 @@ export default function Menu() {
   
   useEffect(() => {
     if (orderSent && billRef.current) {
-      // Wait 100ms after setting final bill for render to complete
       const timer = setTimeout(() => {
         html2canvas(billRef.current).then((canvas) => {
           const link = document.createElement("a");
@@ -134,9 +127,14 @@ const sendOrderToAdmin = async () => {
         setOrder([]);
         setTableId("");
 
-        toast.success("Order sent to kitchen!",{
-          duration: 3000, 
-        });
+        // toast.success("Order sent to kitchen!",{
+        //   duration: 3000, 
+        // });
+        alert('Order sent to kitchen!')
+        setTimeout(() => {
+          setOrder([]);  // or trigger other changes here
+          setTableId("");
+        }, 300);
       } catch (error) {
         console.error("Error sending order: ", error);
         toast.error("Error sending the order.",{
