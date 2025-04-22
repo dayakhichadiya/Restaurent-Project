@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/">
       <Toaster position="top-center" />
       <Routes>
         <Route path="/" element={<Home />} />
