@@ -3,11 +3,14 @@ import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Dashboard from "./pages/Dashboard";
 import Login from "./component/Login";
+import { Toaster } from 'react-hot-toast';
+
 
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/menu" element={<Menu />} />

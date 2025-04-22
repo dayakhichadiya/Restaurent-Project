@@ -1,8 +1,9 @@
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, Timestamp, getDocs } from "firebase/firestore";
 import { db } from '../firebase'
 import { useEffect, useState, useRef } from "react";
 import Navbar from "../component/Navbar";
 import html2canvas from 'html2canvas-pro';
+import toast from "react-hot-toast";
 
 export default function Menu() {
   const [menu, setMenu] = useState([]);
@@ -12,7 +13,6 @@ export default function Menu() {
 
   const currentDateTime = new Date().toLocaleString();
 
-  const [popupBlocked, setPopupBlocked] = useState(false);
   const [orderSent, setOrderSent] = useState(false);
   const [finalBill, setFinalBill] = useState(null);
 
@@ -20,12 +20,27 @@ export default function Menu() {
 
   console.log("🚀 ~ Menu ~ orderSent:", orderSent)
 
+  // useEffect(() => {
+  //   const storedMenu = JSON.parse(localStorage.getItem("menu")) || [];
+  //   setMenu(storedMenu);
+  // }, []);
+
+
   useEffect(() => {
-    const storedMenu = JSON.parse(localStorage.getItem("menu")) || [];
-    setMenu(storedMenu);
+    const fetchMenuItems = async () => {
+      try {
+        const menuRef = collection(db, "menu");
+        const snapshot = await getDocs(menuRef);
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setMenu(items);
+      } catch (error) {
+        console.error("Error fetching menu:", error);
+      }
+    };
+  
+    fetchMenuItems();
   }, []);
-
-
+  
   useEffect(() => {
     if (orderSent && billRef.current) {
       // Wait 100ms after setting final bill for render to complete
@@ -41,6 +56,7 @@ export default function Menu() {
     }
   }, [orderSent]);
 
+
   const handleOrder = (item) => {
     const existing = order.find((o) => o.item === item.item);
     if (existing) {
@@ -54,105 +70,88 @@ export default function Menu() {
     }
   };
 
-  //     console.log("inner try block alert beore")
+// tost - notification
 
 
-  // const sendOrderToAdmin = async () => {
-  //   const confirm = window.confirm("Are you sure you want to send this order to the kitchen?");
-  //   if (!confirm) return;
-    
-  //   setIsLoading(true);
-  //   await addDoc(collection(db, "orders"), billData);
-  //   setIsLoading(false);
+// Show a custom toast confirmation
+const showConfirmToast = (onConfirm, onCancel) => {
+  toast.custom((t) => (
+    <div className="bg-white shadow-md rounded px-4 py-3 border border-gray-300 flex flex-col space-y-2 w-72">
+      <p className="font-medium text-gray-800">Send order to kitchen?</p>
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => {
+            toast.dismiss(t.id);
+            onCancel();
+          }}
+          className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            toast.dismiss(t.id);
+            onConfirm();
+          }}
+          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  ));
+};
 
+const sendOrderToAdmin = async () => {
+  // Step 1: Validate table first
+  if (!tableId.trim()) {
+    toast.error("Please select a valid table");
+    return;
+  }
 
-  //   if (!tableId.trim()) {
-  //     alert("Please select a valid table.");
-  //     return;
-  //   }
-    
+  // Step 2: Validate if order has items
+  if (order.length === 0) {
+    toast.error("Please add items to the order");
+    return;
+  }
 
-  //   try {
-  //     if (tableId && order.length > 0) {
-  //       const billData = {
-  //         tableId,
-  //         order: [...order],
-  //         total: order.reduce((sum, o) => sum + o.qty * o.price, 0),
-  //         timestamp: Timestamp.now(),
-  //       };
-  //       console.log('debuging on button')
-
-  //       // Add to Firestore
-  //       await addDoc(collection(db, "orders"), billData);
-
-  //       // Save for rendering
-  //       setFinalBill(billData);
-  //       setOrderSent(true);
-  //       setOrder([]);
-  //       setTableId("");
-  //       alert("Order sent to the kitchen!");
-
-
-
-
-  //       // Delay to allow re-render
-  //     } else {
-  //       alert("Please select a table and add items to the order.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error sending order: ", error);
-  //     alert("Error sending the order.");
-  //   }
-  // };
-
-
-  const sendOrderToAdmin = async () => {
-    setIsLoading(true);
-  
-    const confirm = window.confirm("Are you sure you want to send this order to the kitchen?");
-    if (!confirm) {
-      setIsLoading(false);
-      return;
-    }
-  
-    if (!tableId.trim()) {
-      alert("Please select a valid table.");
-      setIsLoading(false);
-      return;
-    }
-  
-    try {
-      if (tableId && order.length > 0) {
+  // Step 3: Passed validation — show confirmation
+  showConfirmToast(
+    async () => {
+      setIsLoading(true);
+      try {
         const billData = {
           tableId,
           order: [...order],
           total: order.reduce((sum, o) => sum + o.qty * o.price, 0),
           timestamp: Timestamp.now(),
         };
-  
-        // Now add to Firestore (AFTER billData is defined)
+
         await addDoc(collection(db, "orders"), billData);
-  
-        // Save for rendering
+
         setFinalBill(billData);
         setOrderSent(true);
         setOrder([]);
         setTableId("");
-        alert("Order sent to the kitchen!");
-      } else {
-        alert("Please select a table and add items to the order.");
+
+        toast.success("Order sent to kitchen!");
+      } catch (error) {
+        console.error("Error sending order: ", error);
+        toast.error("Error sending the order.");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error sending order: ", error);
-      alert("Error sending the order.");
-    } finally {
-      setIsLoading(false);
+    },
+    () => {
+      toast("Order not sent", { icon: "❌" });
     }
-  };
-  
+  );
+};
+
   const saveAsImage = () => {
     if (!billRef.current) {
-      alert("Bill not ready yet!");
+      // alert("Bill not ready yet!");
+      toast.error("Bill not ready yet!");
       return;
     }
 
@@ -290,24 +289,7 @@ export default function Menu() {
                 </tbody>
               </table>
 
-              {/* {order.length > 0 && (
-                <div className="flex justify-end mt-6">
-                  <button
-                    onClick={sendOrderToAdmin}
-                    disabled={orderSent}
-                    className={`${orderSent
-                      ? "bg-green-500 cursor-not-allowed"
-                      : "bg-blue-500 hover:bg-blue-600"
-                      } text-white px-6 py-2 rounded font-semibold transition`}
-                  >
-                    {orderSent ? "Order Sent" : "Send Order to Kitchen"}
-                  </button>
-                </div>
-              )} */}
-
-
-
-
+            
               {(order.length > 0 || orderSent) && (
                 <div className="flex justify-end mt-6">
                   {!orderSent ? (
@@ -338,45 +320,11 @@ export default function Menu() {
             {/* Total */}
             <div className="text-right font-bold text-xl pt-4 mt-4 border-t text-gray-900">
               Grand Total: €
-              {/* {(order.length > 0
-                ? order.reduce((sum, o) => sum + o.qty * o.price, 0)
-                : finalBill?.total || 0
-              ).toFixed(2)}
-            </div> */}
-
               {(order.length > 0
                 ? order.reduce((sum, o) => sum + o.qty * o.price, 0)
                 : finalBill?.total || 0
               ).toFixed(2)}
             </div>
-
-
-            {/* Show Bill Button */}
-            {/* <div className="flex justify-end mt-6 no-print">
-              <button
-                onClick={saveAsImage}
-                disabled={!finalBill}
-                className={`${finalBill
-                  ? "bg-yellow-400 hover:bg-yellow-500"
-                  : "bg-gray-300 cursor-not-allowed"
-                  } text-black px-6 py-2 rounded font-semibold`}
-              >
-                Show Bill
-              </button>
-            </div> */}
-            {/* <div className="flex justify-end mt-6 no-print">
-              <button
-                onClick={saveAsImage}
-                disabled={!tableId && !finalBill}
-                className={`${tableId || finalBill
-                  ? "bg-yellow-400 hover:bg-yellow-500"
-                  : "bg-gray-300 cursor-not-allowed"
-                  } text-black px-6 py-2 rounded font-semibold`}
-              >
-                Show Bill
-              </button>
-            </div> */}
-
 
             {order.length === 0 && finalBill && (
               <div className="flex justify-end mt-4">
@@ -401,129 +349,3 @@ export default function Menu() {
 }
 
 
-{/* {order.length > 0 && (
-          <div
-            ref={billRef}
-            style={{
-              marginTop: "2.5rem",
-              backgroundColor: "#ffffff",
-              padding: "1.5rem",
-              borderRadius: "0.5rem",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              color: "#000000",
-              width: "100%",
-            }}
-          >
-            <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-              <h3
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "#1f2937",
-                  borderBottom: "1px solid #d1d5db", // Tailwind gray-300
-                  paddingBottom: "0.5rem",
-                }}
-              >
-                Restaurant Bill
-              </h3>
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#4b5563", // Tailwind gray-600
-                  marginTop: "0.5rem",
-                }}
-              >
-                Date/Time:{" "}
-                {new Date().toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
-              </p>
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#374151",
-                  marginTop: "0.25rem",
-                }}
-              >
-                Table: {tableId || "N/A"}
-              </p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-t border-b">
-                <thead>
-                  <tr className="text-gray-700 font-semibold border-b">
-                    <th className="py-2">Item</th>
-                    <th className="py-2 text-center">Qty</th>
-                    <th className="py-2 text-right">Price (€)</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {order.map((o, i) => (
-                    <tr key={i} className="border-b text-gray-800">
-                      <td className="py-2 flex justify-between items-center gap-2">
-                        {o.item}
-                        <button
-                          onClick={() => {
-                            const updated = [...order];
-                            updated.splice(i, 1);
-                            setOrder(updated);
-                          }}
-                          className="text-red-600 hover:text-red-800 font-semibold text-sm ml-2 no-print"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                      <td className="py-2 text-center">
-                        <input
-                          type="number"
-                          min="1"
-                          value={o.qty}
-                          onChange={(e) => handleQtyChange(i, e.target.value)}
-                          className="w-16 text-center border border-gray-300 rounded px-2 py-1"
-                        />
-                      </td>
-                      <td className="py-2 text-right">€{(o.qty * o.price).toFixed(2)}</td>
-                    </tr>
-                  ))}
-
-
-                </tbody>
-              </table>
-              
-                  <div className="flex justify-end mt-6">
-                    <button
-                      onClick={sendOrderToAdmin}
-                      disabled={orderSent}
-                      className={`${ orderSent ? "bg-green-500 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                        } text-white px-6 py-2 rounded font-semibold transition`}
-                    >
-                      {orderSent ? "Order Sent" : "Send Order to Kitchen"}
-                    </button>
-                  </div>
-            </div>
-
-            <div className="text-right font-bold text-xl pt-4 mt-4 border-t text-gray-900">
-              Grand Total: €{total.toFixed(2)}
-            </div>
-
-            <div className="flex justify-end mt-6 no-print">
-              <button
-                onClick={saveAsImage}
-                disabled={!tableId}
-                className={`${tableId
-                  ? "bg-yellow-400 hover:bg-yellow-500"
-                  : "bg-gray-300 cursor-not-allowed"
-                  } text-black px-6 py-2 rounded font-semibold`}
-              >
-                Show Bill
-              </button>
-            </div>
-          </div>
-        )} */}
