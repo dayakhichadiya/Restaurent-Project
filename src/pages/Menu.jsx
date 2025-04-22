@@ -134,10 +134,14 @@ const sendOrderToAdmin = async () => {
         setOrder([]);
         setTableId("");
 
-        toast.success("Order sent to kitchen!");
+        toast.success("Order sent to kitchen!",{
+          duration: 3000, 
+        });
       } catch (error) {
         console.error("Error sending order: ", error);
-        toast.error("Error sending the order.");
+        toast.error("Error sending the order.",{
+          duration: 4000,
+        });
       } finally {
         setIsLoading(false);
       }
