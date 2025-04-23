@@ -70,7 +70,7 @@ export default function Menu() {
 const showConfirmToast = (onConfirm, onCancel) => {
   toast.custom((t) => (
     <div className="bg-white shadow-md rounded px-4 py-3 border border-gray-300 flex flex-col space-y-2 w-72">
-      <p className="font-medium text-gray-800">Send order to kitchen?</p>
+      <p className="font-medium text-gray-800">Send order ?</p>
       <div className="flex justify-end gap-2">
         <button
           onClick={() => {
@@ -96,19 +96,16 @@ const showConfirmToast = (onConfirm, onCancel) => {
 };
 
 const sendOrderToAdmin = async () => {
-  // Step 1: Validate table first
   if (!tableId.trim()) {
     toast.error("Please select a valid table");
     return;
   }
 
-  // Step 2: Validate if order has items
   if (order.length === 0) {
     toast.error("Please add items to the order");
     return;
   }
 
-  // Step 3: Passed validation — show confirmation
   showConfirmToast(
     async () => {
       setIsLoading(true);
@@ -117,6 +114,7 @@ const sendOrderToAdmin = async () => {
           tableId,
           order: [...order],
           total: order.reduce((sum, o) => sum + o.qty * o.price, 0),
+          printed: false, // 👈 Add this line!
           timestamp: Timestamp.now(),
         };
 
@@ -130,7 +128,7 @@ const sendOrderToAdmin = async () => {
         // toast.success("Order sent to kitchen!",{
         //   duration: 3000, 
         // });
-        alert('Order sent to kitchen!')
+        alert('Order sent')
         setTimeout(() => {
           setOrder([]);  // or trigger other changes here
           setTableId("");
