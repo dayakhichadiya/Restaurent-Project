@@ -4,6 +4,7 @@ import Menu from "./pages/Menu";
 import Dashboard from "./pages/Dashboard";
 import Login from "./component/Login";
 import { Toaster } from 'react-hot-toast';
+import ProtectedRoute from "./component/ProtectedRoutes";
 
 
 function App() {
@@ -13,7 +14,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/menu" element={<Menu />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
         <Route path="/login" element={<Login />} />
       </Routes>
     </Router>

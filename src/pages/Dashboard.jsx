@@ -2,6 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { db } from "../firebase";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import {
   collection,
   query,
@@ -17,7 +20,6 @@ import {
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
 
-const ADMIN_PASSWORD = "lithos123";
 
 const Dashboard = () => {
   const [authPassed, setAuthPassed] = useState(false);
@@ -31,11 +33,60 @@ const Dashboard = () => {
   const [price, setPrice] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedPrice, setEditedPrice] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
 
 
 
   useEffect(() => {
     // localStorage.clear();
+  }, []);
+
+
+  // useEffect(() => {
+  //   const now = new Date();
+  //   const startOfDay = new Date(
+  //     now.getFullYear(),
+  //     now.getMonth(),
+  //     now.getDate(),
+  //     0, 0, 0
+  //   );
+
+  //   const todayOnlyQuery = query(
+  //     collection(db, "orders"),
+  //     where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
+  //     orderBy("timestamp", "desc")
+  //   );
+
+  //   const unsubscribe = onSnapshot(todayOnlyQuery, (querySnapshot) => {
+  //     const orderList = [];
+  //     querySnapshot.forEach((doc) => {
+  //       const data = doc.data();
+  //       if (!data.deleted && data.status !== "Done") {
+  //         orderList.push({ id: doc.id, ...data });
+  //       }
+  //     });
+  //     setOrders(orderList);
+  //   });
+
+  //   return () => unsubscribe();
+  // }, []);
+
+ 
+
+
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      const menuQuery = query(collection(db, "menu"));
+      const querySnapshot = await getDocs(menuQuery);
+      const menuList = [];
+      querySnapshot.forEach((docSnap) => {
+        menuList.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      console.log("Manual fetch menu:", menuList);
+      setMenu(menuList);
+    };
+    fetchMenu();
   }, []);
 
 
@@ -70,18 +121,52 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      const menuQuery = query(collection(db, "menu"));
-      const querySnapshot = await getDocs(menuQuery);
-      const menuList = [];
-      querySnapshot.forEach((docSnap) => {
-        menuList.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      console.log("Manual fetch menu:", menuList);
-      setMenu(menuList);
-    };
-    fetchMenu();
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthPassed(true); // Admin is logged in
+      } else {
+        setAuthPassed(false); // Not logged in
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+
+  const navigate = useNavigate();
+  const handlePasswordCheck = async () => {
+    if (!adminEmail || !adminInput) {
+      toast.error("Please enter both email and password!");
+      return;
+    }
+
+    const auth = getAuth();
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminInput);
+      setAuthPassed(true);
+      toast.success("Logged in as Admin");
+    } catch (error) {
+      toast.error("Invalid credentials");
+      console.error("Login failed:", error);
+      setAdminInput("");
+    }
+    navigate("/dashboard");
+  };
+
+
+  const handleLogout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      setAuthPassed(false);
+      toast.success("Logged out successfully!");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Failed to log out.");
+    }
+  };
+
 
   const handleKeyPress = (e, action) => {
     if (e.key === "Enter") {
@@ -207,17 +292,6 @@ const Dashboard = () => {
   };
 
 
-
-  const handlePasswordCheck = () => {
-    if (adminInput === ADMIN_PASSWORD) {
-      setAuthPassed(true);
-    } else {
-      // alert("Incorrect admin password");
-      toast.error("Incorrect admin password!");
-      setAdminInput("");
-    }
-  };
-
   const handleAdd = async () => {
     if (!item || !price) return toast.error("Please enter both item and price");
     if (isNaN(price)) return toast.error("Price must be a number");
@@ -266,9 +340,54 @@ const Dashboard = () => {
   };
 
 
+  // const handleStatusChange = async (orderId, newStatus) => {
+  //   const orderRef = doc(db, "orders", orderId);
+  //   await updateDoc(orderRef, { status: newStatus });
+  // };
+  // const handleStatusChange = (id, newStatus) => {
+  //   const updatedOrders = orders.map(order =>
+  //     order.id === id ? { ...order, status: newStatus } : order
+  //   );
+  //   setOrders(updatedOrders);
+  // };
+
+
+
+  // const handleStatusChange = async (orderId, newStatus) => {
+  //   try {
+  //     // Update in Firestore
+  //     const orderRef = doc(db, "orders", orderId);
+  //     await updateDoc(orderRef, {
+  //       status: newStatus,
+  //     });
+
+  //     setOrders((prevOrders) =>
+  //       prevOrders.map((order) =>
+  //         order.id === orderId ? { ...order, status: newStatus } : order
+  //       )
+  //     );
+  //   } catch (error) {
+  //     console.error("Failed to update order status:", error);
+  //   }
+  // };
+
+
   const handleStatusChange = async (orderId, newStatus) => {
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { status: newStatus });
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: newStatus, // Only update the status field
+      });
+
+      // Update the order status in the local state to reflect the change
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+    }
   };
 
   const downloadExcel = async () => {
@@ -299,10 +418,44 @@ const Dashboard = () => {
   };
 
 
+  // const downloadExcel = async () => {
+  //   const excelData = orders.map((order) => ({
+  //     Table: order.tableId,
+  //     Total: `€${order.total.toFixed(2)}`,
+  //     Status: order.printed ? "Printed" : "Pending",
+  //     Items: order.order.map((i) => `${i.item} (x${i.qty})`).join(", "),
+  //   }));
+
+  //   const worksheet = XLSX.utils.json_to_sheet(excelData);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+  //   XLSX.writeFile(workbook, "orders.xlsx");
+
+  //   try {
+  //     const updatePromises = orders.map((order) => {
+  //       const orderRef = doc(db, "orders", order.id);
+  //       return updateDoc(orderRef, { printed: true });
+  //     });
+
+  //     await Promise.all(updatePromises);
+  //     toast.success("Excel downloaded and orders marked as printed.");
+  //   } catch (error) {
+  //     console.error("Error updating orders:", error);
+  //     toast.error("Failed to update order status.");
+  //   }
+  // };
+
   if (!authPassed) {
     return (
       <div className="p-6 max-w-md mx-auto bg-white shadow rounded mt-10">
         <h2 className="text-2xl font-semibold mb-4 text-center text-red-600">Admin Login</h2>
+        <input
+          type="email"
+          placeholder="Enter Admin Email"
+          className="w-full border p-3 mb-4 rounded"
+          value={adminEmail}
+          onChange={(e) => setAdminEmail(e.target.value)}
+        />
         <input
           type="password"
           placeholder="Enter Admin Password"
@@ -320,8 +473,20 @@ const Dashboard = () => {
     );
   }
 
+
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
+      {/* Logout Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Tab Buttons */}
       <div className="flex space-x-4 mb-6">
         <button
           onClick={() => setActiveTab("orders")}
@@ -337,106 +502,67 @@ const Dashboard = () => {
         </button>
       </div>
 
+      {/* Tab Content */}
       {activeTab === "orders" && (
         <div>
           <h3 className="text-2xl font-bold mb-4">Today's Orders</h3>
           {orders.length === 0 ? (
             <p className="text-center text-gray-500">No orders yet</p>
           ) : (
-            // <ul>
-            //   {orders.map((order) => (
-
-            //     <li key={order.id} className="p-4 border-b">
-            //       <p>Table: {order.tableId}</p>
-            //       <ul className="text-sm mb-2">
-            //         {order.order?.map((item, index) => (
-            //           <li key={index}>
-            //             {item.item} (x{item.qty}) - €{(item.price * item.qty).toFixed(2)}
-            //           </li>
-            //         ))}
-            //         {order.printed ? (
-            //           <span className="text-green-600">✔ Printed</span>
-            //         ) : (
-            //           <span className="text-red-600">⏳ Not Printed</span>
-            //         )}
-
-            //         <button
-            //           onClick={() => handlePrint(order)}
-            //           className="mt-2 bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800"
-            //         >
-            //           Print Bill
-            //         </button>
-
-            //       </ul>
-            //       <p className="font-bold">Total: €{order.total.toFixed(2)}</p>
-            //       <p className="text-sm">
-            //         Status: <span className={`font-semibold ${order.status === "Done" ? "text-green-600" : "text-yellow-600"}`}>{order.status || "Pending"}</span>
-            //       </p>
-            //       <button
-            //         onClick={() => handleStatusChange(order.id, order.status === "Done" ? "Pending" : "Done")}
-            //         className="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-            //       >
-            //         Mark as {order.status === "Done" ? "Pending" : "Done"}
-            //       </button>
-            //     </li>
-            //   ))}
-            // </ul>
             <ul className="divide-y divide-gray-200">
-  {orders.map((order) => (
-    <li key={order.id} className="p-4 bg-white shadow rounded-md mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-lg">Table: {order.tableId}</h3>
-        <span
-          className={`px-2 py-1 rounded text-sm font-medium ${
-            order.printed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {order.printed ? '✔ Printed' : '⏳ Not Printed'}
-        </span>
-      </div>
+              {orders.map((order) => (
+                <li key={order.id} className="p-4 bg-white shadow rounded-md mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg">Table: {order.tableId}</h3>
+                    <span
+                      className={`px-2 py-1 rounded text-sm font-medium ${order.printed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}
+                    >
+                      {order.printed ? '✔ Printed' : '⏳ Not Printed'}
+                    </span>
+                  </div>
 
-      <ul className="text-sm mb-2 ml-4 list-disc">
-        {order.order?.map((item, index) => (
-          <li key={index}>
-            {item.item} (x{item.qty}) – €{(item.price * item.qty).toFixed(2)}
-          </li>
-        ))}
-      </ul>
+                  <ul className="text-sm mb-2 ml-4 list-disc">
+                    {order.order?.map((item, index) => (
+                      <li key={index}>
+                        {item.item} (x{item.qty}) – €{(item.price * item.qty).toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
 
-      <div className="flex items-center justify-between mt-3">
-        <p className="font-bold text-gray-800">Total: €{order.total.toFixed(2)}</p>
-        <button
-          onClick={() => handlePrint(order)}
-          className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800 text-sm"
-        >
-          Print Bill
-        </button>
-      </div>
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="font-bold text-gray-800">Total: €{order.total.toFixed(2)}</p>
+                    <button
+                      onClick={() => handlePrint(order)}
+                      className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800 text-sm"
+                    >
+                      Print Bill
+                    </button>
+                  </div>
 
-      <div className="flex items-center justify-between mt-2">
-        <p className="text-sm">
-          Status:{" "}
-          <span
-            className={`font-semibold ${
-              order.status === "Done" ? "text-green-600" : "text-yellow-600"
-            }`}
-          >
-            {order.status || "Pending"}
-          </span>
-        </p>
-        <button
-          onClick={() =>
-            handleStatusChange(order.id, order.status === "Done" ? "Pending" : "Done")
-          }
-          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
-        >
-          Mark as {order.status === "Done" ? "Pending" : "Done"}
-        </button>
-      </div>
-    </li>
-  ))}
-</ul>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-sm">
+                      Status:{" "}
+                      <span className={`font-semibold ${order.status === "Done" ? "text-white bg-green-600 px-2 p-1 rounded-md" : "text-yellow-600"
+                        }`}>
+                        {order.status || "Pending"}
+                      </span>
+                    </p>
 
+
+                    <button
+                      disabled={order.status === "Done"}
+                      onClick={() => handleStatusChange(order.id, order.status === "Done" ? "Pending" : "Done")}
+                      className={`px-3 py-1 rounded text-sm ${order.status === "Done" ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+                    >
+                      Mark as {order.status === "Done" ? "Pending" : "Done"}
+                    </button>
+
+
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
           {orders.length > 0 && (
             <button
@@ -476,10 +602,7 @@ const Dashboard = () => {
           <h2 className="text-xl font-semibold mb-3">Menu Items</h2>
           <ul className="space-y-4">
             {menu.map((menuItem) => (
-              <li
-                key={menuItem.id}
-                className="border p-4 rounded flex justify-between items-center"
-              >
+              <li key={menuItem.id} className="border p-4 rounded flex justify-between items-center">
                 <div>
                   <p className="font-semibold">{menuItem.item}</p>
                   {editingIndex === menuItem.id ? (
@@ -528,7 +651,7 @@ const Dashboard = () => {
       )}
     </div>
   );
-};
+}
 
 export default Dashboard;
 
