@@ -285,10 +285,12 @@ const Dashboard = () => {
     printWindow.close();
     toast.dismiss(); // clear loading
     // toast.success("Receipt printed and marked as done!");
+    alert("Receipt printed and marked as done!");
 
     const orderRef = doc(db, "orders", order.id);
     await updateDoc(orderRef, { printed: true });
-    toast.success("Receipt printed and marked as done!");
+    // toast.success("Receipt printed and marked as done!");
+    alert("Receipt printed and marked as done!")
   };
 
 
@@ -339,39 +341,6 @@ const Dashboard = () => {
     }
   };
 
-
-  // const handleStatusChange = async (orderId, newStatus) => {
-  //   const orderRef = doc(db, "orders", orderId);
-  //   await updateDoc(orderRef, { status: newStatus });
-  // };
-  // const handleStatusChange = (id, newStatus) => {
-  //   const updatedOrders = orders.map(order =>
-  //     order.id === id ? { ...order, status: newStatus } : order
-  //   );
-  //   setOrders(updatedOrders);
-  // };
-
-
-
-  // const handleStatusChange = async (orderId, newStatus) => {
-  //   try {
-  //     // Update in Firestore
-  //     const orderRef = doc(db, "orders", orderId);
-  //     await updateDoc(orderRef, {
-  //       status: newStatus,
-  //     });
-
-  //     setOrders((prevOrders) =>
-  //       prevOrders.map((order) =>
-  //         order.id === orderId ? { ...order, status: newStatus } : order
-  //       )
-  //     );
-  //   } catch (error) {
-  //     console.error("Failed to update order status:", error);
-  //   }
-  // };
-
-
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const orderRef = doc(db, "orders", orderId);
@@ -410,40 +379,13 @@ const Dashboard = () => {
       });
 
       await Promise.all(updatePromises);
-      toast.success("Excel downloaded and orders marked as printed.");
+      // toast.success("Excel downloaded and orders marked as printed.");
+      alert("Excel downloaded and orders marked as printed.");
     } catch (error) {
       console.error("Error updating orders:", error);
       toast.error("Failed to update order status.");
     }
   };
-
-
-  // const downloadExcel = async () => {
-  //   const excelData = orders.map((order) => ({
-  //     Table: order.tableId,
-  //     Total: `€${order.total.toFixed(2)}`,
-  //     Status: order.printed ? "Printed" : "Pending",
-  //     Items: order.order.map((i) => `${i.item} (x${i.qty})`).join(", "),
-  //   }));
-
-  //   const worksheet = XLSX.utils.json_to_sheet(excelData);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
-  //   XLSX.writeFile(workbook, "orders.xlsx");
-
-  //   try {
-  //     const updatePromises = orders.map((order) => {
-  //       const orderRef = doc(db, "orders", order.id);
-  //       return updateDoc(orderRef, { printed: true });
-  //     });
-
-  //     await Promise.all(updatePromises);
-  //     toast.success("Excel downloaded and orders marked as printed.");
-  //   } catch (error) {
-  //     console.error("Error updating orders:", error);
-  //     toast.error("Failed to update order status.");
-  //   }
-  // };
 
   if (!authPassed) {
     return (
@@ -549,7 +491,6 @@ const Dashboard = () => {
                       </span>
                     </p>
 
-
                     <button
                       disabled={order.status === "Done"}
                       onClick={() => handleStatusChange(order.id, order.status === "Done" ? "Pending" : "Done")}
@@ -557,8 +498,6 @@ const Dashboard = () => {
                     >
                       Mark as {order.status === "Done" ? "Pending" : "Done"}
                     </button>
-
-
                   </div>
                 </li>
               ))}
@@ -641,7 +580,6 @@ const Dashboard = () => {
               </li>
             ))}
           </ul>
-
           <Link to="/menu">
             <button className="mt-6 w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800">
               Go to Menu Page
